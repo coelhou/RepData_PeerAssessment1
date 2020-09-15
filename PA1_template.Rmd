@@ -4,22 +4,89 @@ output:
   html_document:
     keep_md: true
 ---
+```{r setoptions,echo=FALSE}
+# opt_chunk$set(echo = FALSE, results = "hide")
 
+```
 
 ## Loading and preprocessing the data
+1. Loading Data  
+```{r LoadingData, echo=TRUE, message=FALSE, warning=FALSE}
+# Loading libraries 
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(plyr)
 
+# Loading
+df <- fread("activity.csv")
+head(df)
+```
 
+2. Preprocessing data  
+```{r preprocessing, echo=TRUE, message=FALSE, warning=FALSE}
+to_time <- function(x){
+    sprintf("%02d:%02d", x%/%100, x%%100)
+}
 
-## What is mean total number of steps taken per day?
+df$timeIterval <- with(df, as.POSIXct(paste(date, to_time(interval)), format="%Y-%m-%d %H:%M"))
+head(df)
+```
+## What is mean total number of steps taken per day?  
+1. Calculating the total number of steps taken each day  
+```{r totalstepsNumber, echo=TRUE, message=FALSE, warning=FALSE}
+totalStepsPerDay <- df %>% dplyr::group_by(date) %>% dplyr::summarise(totalSteps = sum(steps, na.rm = TRUE))
+totalStepsPerDay
+```
 
+2. Histogram of the total number of steps taken each day  
 
+```{r histogram, echo=TRUE, message=FALSE, warning=FALSE, fig.height=5, fig.width=6}
+qplot(totalStepsPerDay$totalSteps, binwidth = 1000, xlab = "The total number of steps per day", ylab = "Frequency", main = "Total number of steps taken each day", fill = "red") + guides(fill = FALSE)
+```  
+  
+3. Calculating the mean and median of the total number of steps taken per day    
+
+```{r meanAndMedian, echo=TRUE, message=FALSE, warning=FALSE, fig.height=5, fig.width=6}
+meanTotalStepsPerDay <- mean(totalStepsPerDay$totalSteps, na.rm = TRUE)
+medianTotalStepsPerDay <- median(totalStepsPerDay$totalSteps, na.rm = TRUE)
+```
+The mean of the total number of steps taken per day is: **`r meanTotalStepsPerDay`**  
+The median of the total number of steps taken per day is: **`r medianTotalStepsPerDay`**  
 
 ## What is the average daily activity pattern?
+1.  The average number of steps taken across all days  
+```{r plot, echo=TRUE, message=FALSE, warning=FALSE, fig.height=5, fig.width=6}
+dailyAverage <- df %>% dplyr::group_by(interval) %>% dplyr::summarise(dailyAverageSteps = mean(steps, na.rm = TRUE))
+# plotting
+qplot(interval, dailyAverageSteps, data = dailyAverage, geom = "line", col = "red", xlab = "5-minute interval", ylab = "The average number of steps taken", main = "Average daily activity") + guides(col = FALSE)
+```
 
-
+2. The 5-minute interval containing the maximum number of steps
+```{r maxStepsInterval, echo=TRUE, message=FALSE, warning=FALSE}
+maxInterval <- dailyAverage %>% filter(dailyAverageSteps == max(dailyAverageSteps))
+```
+The 5-minute interval containing the maximum number of steps is **`r to_time(maxInterval$interval)`**  
 
 ## Imputing missing values
+1. Calculating the total number of missing values in the dataset  
 
+```{r numberNAs, echo=TRUE, message=FALSE, warning=FALSE}
+nbrNA <- sum(!complete.cases(df))
+```
+The total number of missing values is: **`r nbrNA`**  
 
+2. Missing values can be treated using several methods such as **mean/mode/median** imputation, **KNN** imputation or using a **prediction model** to estimate values that will substitute the missing data.   
+In the following an implementation of an imputation method based on the mean .  
+```{r imputeNAsMean, echo=TRUE, message=FALSE, warning=FALSE}
+imputeByMean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 
+```
+3. Creation of a new dataset with the missing data filled in by the mean for 5-minute interval.   
+```{r dfWithoutNAs, echo=TRUE, message=FALSE, warning=FALSE}
+df3 <- df %>% dplyr::group_by(interval) %>% dplyr::mutate(steps = imputeByMean(steps) )
+head(df3)
+
+```
 ## Are there differences in activity patterns between weekdays and weekends?
