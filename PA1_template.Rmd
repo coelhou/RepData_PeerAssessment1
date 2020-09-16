@@ -19,31 +19,30 @@ library(ggplot2)
 library(lubridate)
 library(plyr)
 
-# Loading
+# Loading data
 df <- fread("activity.csv")
 head(df)
 ```
 
-2. Preprocessing data  
+2. Preprocessing data:  a new variable "timeInterval"is created, containing the conversion of the variable "interval" from integer to POSIXct although this had no use for us later.  
 ```{r preprocessing, echo=TRUE, message=FALSE, warning=FALSE}
 to_time <- function(x){
     sprintf("%02d:%02d", x%/%100, x%%100)
 }
-
-df$timeIterval <- with(df, as.POSIXct(paste(date, to_time(interval)), format="%Y-%m-%d %H:%M"))
+df$timeInterval <- with(df, as.POSIXct(paste(date, to_time(interval)), format="%Y-%m-%d %H:%M"))
 head(df)
 ```
 ## What is mean total number of steps taken per day?  
 1. Calculating the total number of steps taken each day  
 ```{r totalstepsNumber, echo=TRUE, message=FALSE, warning=FALSE}
 totalStepsPerDay <- df %>% dplyr::group_by(date) %>% dplyr::summarise(totalSteps = sum(steps, na.rm = TRUE))
-totalStepsPerDay
+head(totalStepsPerDay)
 ```
 
 2. Histogram of the total number of steps taken each day  
 
 ```{r histogram, echo=TRUE, message=FALSE, warning=FALSE, fig.height=5, fig.width=6}
-qplot(totalStepsPerDay$totalSteps, binwidth = 1000, xlab = "The total number of steps per day", ylab = "Frequency", main = "Total number of steps taken each day", fill = "red") + guides(fill = FALSE)
+qplot(totalStepsPerDay$totalSteps, binwidth = 1000, xlab = "Total number of steps per day", ylab = "Frequency", main = "Total number of steps taken each day", fill = "red") + guides(fill = FALSE)
 ```  
   
 3. Calculating the mean and median of the total number of steps taken per day    
@@ -78,15 +77,46 @@ nbrNA <- sum(!complete.cases(df))
 The total number of missing values is: **`r nbrNA`**  
 
 2. Missing values can be treated using several methods such as **mean/mode/median** imputation, **KNN** imputation or using a **prediction model** to estimate values that will substitute the missing data.   
-In the following an implementation of an imputation method based on the mean .  
+In the following an implementation of an imputation method based on the mean.  
 ```{r imputeNAsMean, echo=TRUE, message=FALSE, warning=FALSE}
 imputeByMean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
-
 ```
 3. Creation of a new dataset with the missing data filled in by the mean for 5-minute interval.   
 ```{r dfWithoutNAs, echo=TRUE, message=FALSE, warning=FALSE}
-df3 <- df %>% dplyr::group_by(interval) %>% dplyr::mutate(steps = imputeByMean(steps) )
-head(df3)
-
+# Apply mean imputation after grouping data by interval
+df2 <- df %>% dplyr::group_by(interval) %>% dplyr::mutate(steps = imputeByMean(steps))
+head(df2)
 ```
-## Are there differences in activity patterns between weekdays and weekends?
+4. Histogram of the total number of steps taken each day  
+
+```{r totalstepsNumber2, echo=TRUE, message=FALSE, warning=FALSE, fig.height=5, fig.width=6}
+totalStepsPerDay2 <- df2 %>% dplyr::group_by(date) %>% dplyr::summarise(totalSteps = sum(steps, na.rm = TRUE))
+# histogram
+qplot(totalStepsPerDay2$totalSteps, binwidth = 1000, xlab = "Total number of steps per day", ylab = "Frequency", main = "New total number of steps taken each day", fill = "red") + guides(fill = FALSE)
+# Mean & Median
+meanTotalStepsPerDay2 <- mean(totalStepsPerDay2$totalSteps)
+medianTotalStepsPerDay2 <- median(totalStepsPerDay2$totalSteps)
+```
+The new mean of the total number of steps taken per day is: **`r  meanTotalStepsPerDay2`**  
+The new median of the total number of steps taken per day is: **`r medianTotalStepsPerDay2`**  
+The new values of the mean, as well as the median, are visibly larger. This is because many of the null values have been replaced with the 5-minute interval averages after applying the imputation.  
+
+## Are there differences in activity patterns between weekdays and weekends?  
+
+1. Create a new factor variable  indicating whether a given date is a weekday or weekend day.    
+
+```{r factors, echo=TRUE, message=FALSE, warning=FALSE}
+df2 <- df2 %>% dplyr::mutate(weekDay = factor(1*(weekdays(date) %in% c("Saturday", "Sunday")), labels = c("weekday", "weekend") ))
+head(df2)
+```
+
+2. The average number of steps taken across all weekday days or weekend days
+
+```{r plot2, echo=TRUE, message=FALSE, warning=FALSE, fig.height=5, fig.width=6}
+weekdayAverage <- df2 %>% dplyr::group_by(interval, weekDay) %>% dplyr::summarise(weekdayAverageSteps = mean(steps, na.rm = TRUE))
+# plotting
+qplot(interval, weekdayAverageSteps, data = weekdayAverage, geom = "line", col = "red", facets = weekDay ~ ., xlab = "5-minute interval", ylab = "The average number of steps", main = "Average weekday/weekend activity") + guides(col = FALSE)
+```
+
+
+
