@@ -24,9 +24,10 @@ df <- fread("activity.csv")
 head(df)
 ```
 
-2. Preprocessing data:  a new variable "timeInterval"is created, containing the conversion of the variable "interval" from integer to POSIXct although this had no use for us later.  
+2. **Preprocessing data**:  a new variable "timeInterval" is created, containing the conversion of the variable "interval" from integer to POSIXct although this had no use for us later.  
 ```{r preprocessing, echo=TRUE, message=FALSE, warning=FALSE}
 to_time <- function(x){
+    # returns the 5-minutes interval in "hh:nn" format.
     sprintf("%02d:%02d", x%/%100, x%%100)
 }
 df$timeInterval <- with(df, as.POSIXct(paste(date, to_time(interval)), format="%Y-%m-%d %H:%M"))
@@ -51,8 +52,8 @@ qplot(totalStepsPerDay$totalSteps, binwidth = 1000, xlab = "Total number of step
 meanTotalStepsPerDay <- mean(totalStepsPerDay$totalSteps, na.rm = TRUE)
 medianTotalStepsPerDay <- median(totalStepsPerDay$totalSteps, na.rm = TRUE)
 ```
-The mean of the total number of steps taken per day is: **`r meanTotalStepsPerDay`**  
-The median of the total number of steps taken per day is: **`r medianTotalStepsPerDay`**  
+- The mean of the total number of steps taken per day is: **`r meanTotalStepsPerDay`**  
+- The median of the total number of steps taken per day is: **`r medianTotalStepsPerDay`**  
 
 ## What is the average daily activity pattern?
 1.  The average number of steps taken across all days  
@@ -66,7 +67,7 @@ qplot(interval, dailyAverageSteps, data = dailyAverage, geom = "line", col = "re
 ```{r maxStepsInterval, echo=TRUE, message=FALSE, warning=FALSE}
 maxInterval <- dailyAverage %>% filter(dailyAverageSteps == max(dailyAverageSteps))
 ```
-The 5-minute interval containing the maximum number of steps is **`r to_time(maxInterval$interval)`**  
+- The 5-minute interval containing the maximum number of steps is **`r to_time(maxInterval$interval)`**  
 
 ## Imputing missing values
 1. Calculating the total number of missing values in the dataset  
@@ -74,7 +75,7 @@ The 5-minute interval containing the maximum number of steps is **`r to_time(max
 ```{r numberNAs, echo=TRUE, message=FALSE, warning=FALSE}
 nbrNA <- sum(!complete.cases(df))
 ```
-The total number of missing values is: **`r nbrNA`**  
+- The total number of missing values is: **`r nbrNA`**  
 
 2. Missing values can be treated using several methods such as **mean/mode/median** imputation, **KNN** imputation or using a **prediction model** to estimate values that will substitute the missing data.   
 In the following an implementation of an imputation method based on the mean.  
@@ -97,9 +98,9 @@ qplot(totalStepsPerDay2$totalSteps, binwidth = 1000, xlab = "Total number of ste
 meanTotalStepsPerDay2 <- mean(totalStepsPerDay2$totalSteps)
 medianTotalStepsPerDay2 <- median(totalStepsPerDay2$totalSteps)
 ```
-The new mean of the total number of steps taken per day is: **`r  meanTotalStepsPerDay2`**  
-The new median of the total number of steps taken per day is: **`r medianTotalStepsPerDay2`**  
-The new values of the mean, as well as the median, are visibly larger. This is because many of the null values have been replaced with the 5-minute interval averages after applying the imputation.  
+- The new mean of the total number of steps taken per day is: **`r  meanTotalStepsPerDay2`**  
+- The new median of the total number of steps taken per day is: **`r medianTotalStepsPerDay2`**  
+- The new values of the mean, as well as the median, are visibly larger. This is because many of the null values have been replaced with the 5-minute interval averages after applying the imputation.  
 
 ## Are there differences in activity patterns between weekdays and weekends?  
 

@@ -389,9 +389,10 @@ head(df)</code></pre>
 ## 5:    NA 2012-10-01       20
 ## 6:    NA 2012-10-01       25</code></pre>
 <ol start="2" style="list-style-type: decimal">
-<li>Preprocessing data: a new variable “timeInterval”is created, containing the conversion of the variable “interval” from integer to POSIXct although this had no use for us later.</li>
+<li><strong>Preprocessing data</strong>: a new variable “timeInterval” is created, containing the conversion of the variable “interval” from integer to POSIXct although this had no use for us later.</li>
 </ol>
 <pre class="r"><code>to_time &lt;- function(x){
+    # returns the 5-minutes interval in &quot;hh:nn&quot; format.
     sprintf(&quot;%02d:%02d&quot;, x%/%100, x%%100)
 }
 df$timeInterval &lt;- with(df, as.POSIXct(paste(date, to_time(interval)), format=&quot;%Y-%m-%d %H:%M&quot;))
@@ -430,8 +431,11 @@ head(totalStepsPerDay)</code></pre>
 </ol>
 <pre class="r"><code>meanTotalStepsPerDay &lt;- mean(totalStepsPerDay$totalSteps, na.rm = TRUE)
 medianTotalStepsPerDay &lt;- median(totalStepsPerDay$totalSteps, na.rm = TRUE)</code></pre>
-<p>The mean of the total number of steps taken per day is: <strong>9354.2295082</strong><br />
-The median of the total number of steps taken per day is: <strong>10395</strong></p>
+<ul>
+<li>The mean of the total number of steps taken per day is: <strong>9354.2295082</strong><br />
+</li>
+<li>The median of the total number of steps taken per day is: <strong>10395</strong></li>
+</ul>
 </div>
 <div id="what-is-the-average-daily-activity-pattern" class="section level2">
 <h2>What is the average daily activity pattern?</h2>
@@ -446,7 +450,9 @@ qplot(interval, dailyAverageSteps, data = dailyAverage, geom = &quot;line&quot;,
 <li>The 5-minute interval containing the maximum number of steps</li>
 </ol>
 <pre class="r"><code>maxInterval &lt;- dailyAverage %&gt;% filter(dailyAverageSteps == max(dailyAverageSteps))</code></pre>
-<p>The 5-minute interval containing the maximum number of steps is <strong>08:35</strong></p>
+<ul>
+<li>The 5-minute interval containing the maximum number of steps is <strong>08:35</strong></li>
+</ul>
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
@@ -454,7 +460,9 @@ qplot(interval, dailyAverageSteps, data = dailyAverage, geom = &quot;line&quot;,
 <li>Calculating the total number of missing values in the dataset</li>
 </ol>
 <pre class="r"><code>nbrNA &lt;- sum(!complete.cases(df))</code></pre>
-<p>The total number of missing values is: <strong>2304</strong></p>
+<ul>
+<li>The total number of missing values is: <strong>2304</strong></li>
+</ul>
 <ol start="2" style="list-style-type: decimal">
 <li>Missing values can be treated using several methods such as <strong>mean/mode/median</strong> imputation, <strong>KNN</strong> imputation or using a <strong>prediction model</strong> to estimate values that will substitute the missing data.<br />
 In the following an implementation of an imputation method based on the mean.</li>
@@ -486,9 +494,13 @@ qplot(totalStepsPerDay2$totalSteps, binwidth = 1000, xlab = &quot;Total number o
 <pre class="r"><code># Mean &amp; Median
 meanTotalStepsPerDay2 &lt;- mean(totalStepsPerDay2$totalSteps)
 medianTotalStepsPerDay2 &lt;- median(totalStepsPerDay2$totalSteps)</code></pre>
-<p>The new mean of the total number of steps taken per day is: <strong>1.076618910^{4}</strong><br />
-The new median of the total number of steps taken per day is: <strong>1.076618910^{4}</strong><br />
-The new values of the mean, as well as the median, are visibly larger. This is because many of the null values have been replaced with the 5-minute interval averages after applying the imputation.</p>
+<ul>
+<li>The new mean of the total number of steps taken per day is: <strong>1.076618910^{4}</strong><br />
+</li>
+<li>The new median of the total number of steps taken per day is: <strong>1.076618910^{4}</strong><br />
+</li>
+<li>The new values of the mean, as well as the median, are visibly larger. This is because many of the null values have been replaced with the 5-minute interval averages after applying the imputation.</li>
+</ul>
 </div>
 <div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
